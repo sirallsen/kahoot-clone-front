@@ -164,4 +164,15 @@ body
   font-family: 'Grandstander', cursive;
   font-weight: 700;
 }
+div {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  text-align: center;
+}
+
+img
+{
+  margin-top: -50px;
+  width: 100%;
+}
 </style>
