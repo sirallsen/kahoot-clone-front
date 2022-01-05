@@ -167,7 +167,6 @@ body
 div {
   word-wrap: break-word;
   white-space: pre-wrap;
-  text-align: center;
 }
 
 img

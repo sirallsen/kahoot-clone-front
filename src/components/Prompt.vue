@@ -18,34 +18,31 @@
                 <img :hidden="this.round.additional !== 'king'" src="~assets/knight-out-cards/king.png">
             </q-card-section>
             <q-card :hidden="this.round.type == 'info'" style="border-radius: 30px; padding: 0 20px; " bordered flat>
-                <q-card-section class="flex flex-center" style="flex-direction: column">
+                <q-card-section class="flex flex-center q-pa-none" style="flex-direction: column">
                     <div class="flex flex-center" style="flex-direction: column" v-if="this.round.type == 'input'">
                         <q-input input-class="text-center text-weight-bold" counter maxlength="40" autogrow style="font-size: 22px; line-heigth: 15px" v-model="input" type="text" outlined class="q-my-md" rounded/>
                         <q-btn color="primary" style="font-size: 25px" rounded label="SEND" padding="10px 50px" @click="this.sent = true"/>
                     </div>
                     <div class="flex flex-center q-my-md" style="flex-direction: column" v-if="this.round.type == 'vote'">
-                        <q-list class="q-mb-md">
-                            <q-item tag="label" v-for="opt in this.round.options" :key="opt.id">
-                                <q-item-section side top>
-                                    <q-checkbox v-model="this.marked[opt.id]" :toggle-indeterminate="false"/>
-                                </q-item-section>
-                                <q-item-section>
-                                <q-item-label caption style="font-size: 18px">
-                                    {{ opt.value }}
-                                </q-item-label>
-                                </q-item-section>
-                            </q-item>
-                        </q-list>
+                        <div class="q-pa-md q-pb-lg" style="text-align: left;">
+                            <q-option-group
+                            v-model="group"
+                            :options="this.round.options"
+                            color="primary"
+                            size="md"
+                            style="font-size: 18px"
+                            />
+                        </div>
                         <q-btn color="primary" style="font-size: 25px" rounded label="SEND" padding="10px 50px" @click="this.sent = true"/>
                     </div>
                 </q-card-section>
-        </q-card>
+            </q-card>
         </div>
     </div>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { mapActions } from 'vuex';
 
 export default defineComponent({
@@ -79,6 +76,11 @@ export default defineComponent({
         marked: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,],
         sent: false
     }
+    },
+    setup () {
+        return {
+        group: ref('op1')
+        }
     }
 })
 </script>
