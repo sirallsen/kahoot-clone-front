@@ -16,7 +16,7 @@
 
   let message = {};
 
-  const ws = new WebSocket("ws://localhost:8080", "protocolOne");
+  const ws = new WebSocket("wss://lively-paper-345.fly.dev:443", "protocolOne");
 
   ws.onmessage = (e) => {
     try {
