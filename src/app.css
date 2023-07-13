@@ -27,7 +27,12 @@ html {
 body
 {
   width: 100%;
-  height: 100%;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 #app
@@ -38,6 +43,10 @@ body
 
 .card-body {
   max-width: 20%;
+}
+
+.bigger-card-body {
+  max-width: 50%;
 }
 
 section {

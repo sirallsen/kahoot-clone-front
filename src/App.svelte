@@ -4,15 +4,19 @@
   import JoinRoom from "./lib/JoinRoom.svelte";
   import Prompt from "./lib/Prompt.svelte";
   import StatusBox from "./lib/StatusBox.svelte";
+  import Result from "./lib/Result.svelte";
 
   let connected = false;
   let prompt = false;
   let wait = true;
   let gameStarted = false;
-
+  let gameOver = false;
+  let currentQuestion = -1;
   let username;
   let roomCode;
+  let intervalID;
   let isHost = false;
+  let timer = 10;
 
   let message = {};
 
@@ -20,20 +24,42 @@
   const ws = new WebSocket("ws://localhost:8080", "protocolOne");
 
   ws.onmessage = (e) => {
+    if(gameOver)
+      return;
+
     try {
       let previousMessage = message;
-
+      console.log(e.data);
       message = JSON.parse(e.data);
       if (message.msgType == "Connected") {
         if (message.additional != "") {
           isHost = true;
+          roomCode = message.roomId;
         }
         connected = true;
         prompt = false;
         wait = true;
+      } else if (message.msgType == "Create") {
+        roomCode = message.roomId;
       } else if (message.msgType == "StartGame") {
-        gameStarted = true;
-        wait = true;
+        if (message.questions.length - 1 < currentQuestion + 1 && gameStarted && isHost) {
+          message = previousMessage;
+          gameStarted = false;
+          const value = {
+            msgType: "EndGame",
+            roomId: roomCode,
+          };
+
+          ws.send(JSON.stringify(value).toString());
+
+          return;
+        } else {
+          gameStarted = true;
+          starTimer();
+          wait = false;
+          prompt = true;
+          currentQuestion++;
+        }
       } else if (message.msgType == "StartInput") {
         message.inputs.forEach((element) => {
           if (element.username == username) {
@@ -55,13 +81,60 @@
       } else if (message.msgType == "EndInput") {
         wait = true;
         prompt = false;
+
+        const value = {
+          msgType: "StartGame",
+          roomId: roomCode,
+          questions: message.questions,
+        };
+
+        ws.send(JSON.stringify(value).toString());
       } else if (message.msgType == "Handshake") {
+        message = previousMessage;
+      } else if (message.msgType == "Scores") {
+        clearInterval(intervalID);
+        gameOver = true;
+        prompt = false;
+        wait = false;
+      } else {
         message = previousMessage;
       }
     } catch (error) {
       alert(e.data);
     }
   };
+
+  function endInput() {
+    if(gameOver)
+      return;
+
+    timer = 10;
+
+    const value = {
+      msgType: "EndInput",
+      questions: message.questions,
+      roomId: roomCode,
+    };
+
+    ws.send(JSON.stringify(value).toString());
+  }
+
+  function decrementTimer() {
+    timer--;
+    if (timer === 0) {
+      endInput();
+      return;
+    }
+  }
+
+  function starTimer() {
+    clearInterval(intervalID);
+    if (isHost) {
+      intervalID = setInterval(() => {
+        decrementTimer();
+      }, 1000);
+    }
+  }
 </script>
 
 <body>
@@ -70,24 +143,29 @@
   {/if}
 
   {#if connected}
-    {#if prompt}
+    {#if prompt && gameStarted}
       <Prompt
         {username}
         {roomCode}
-        type={message.input?.inputType}
+        {timer}
+        {isHost}
         socket={ws}
-        prompt={message.prompt}
-        options={message.input?.options}
+        questions={message.questions}
+        prompt={message.questions[currentQuestion].question}
+        options={message.questions[currentQuestion].answers}
       />
     {/if}
     {#if wait}
       <StatusBox
-        prompt={"It's done. You need to wait now."}
+        prompt={"Agora é só esperar"}
         {isHost}
         {gameStarted}
         socket={ws}
         {roomCode}
       />
+    {/if}
+    {#if gameOver}
+      <Result players={message.players} />
     {/if}
   {/if}
 </body>
